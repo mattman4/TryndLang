@@ -32,11 +32,14 @@
 *.a
 *.lib
 
-# Executables
+# Executables / builds
 *.exe
 *.out
 *.app
-trynd
+/build
 
 # debug information files
 *.dwo
+
+# JetBrains
+.idea/
