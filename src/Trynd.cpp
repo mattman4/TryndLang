@@ -1,12 +1,11 @@
 #include <iostream>
-#include <string>
 #include <fstream>
 #include <vector>
+#include "Trynd.h"
 
-void runFile(const std::string&);
+bool hasError = false;
 
-int main(int argc, char* argv[]) {
-
+int main(const int argc, char* argv[]) {
     if(argc > 2) {
         std::cout << "Usage: trynd [<file>]" << std::endl;
         return EXIT_FAILURE;
@@ -15,7 +14,7 @@ int main(int argc, char* argv[]) {
     if(argc == 2) {
         runFile(argv[1]);
     } else {
-        // Run prompt
+        runPrompt();
     }
 
     return EXIT_SUCCESS;
@@ -37,5 +36,29 @@ void runFile(const std::string& path) {
     std::vector<char> chars(size);
     file.read(chars.data(), size);
 
-    for(auto c : chars) std::cout << c;
+    for(const auto c : chars) std::cout << c;
+
+    if (hasError) std::exit(EXIT_FAILURE);
+}
+
+void runPrompt() {
+    while (true) {
+        std::cout << "> ";
+        std::string line;
+        if (!std::getline(std::cin, line)) break;
+        run(line);
+        hasError = false;
+    }
+}
+
+void run(const std::string& line) {
+
+}
+
+void error(const int line, const std::string& message) {
+    report(line, "", message);
+}
+
+void report(const int line, const std::string& where, const std::string& message) {
+    std::cout << "Error! Line " << line << " (" << where << "): " << message << std::endl;
 }
