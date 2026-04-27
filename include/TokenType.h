@@ -20,7 +20,7 @@ enum class TokenType {
     VAR, FUNC, CLASS, FOR, WHILE,
     NIL, THIS, SUPER, RETURN, PRINT,
 
-    _EOF
+    EOF_
 };
 
 inline std::ostream& operator<<(std::ostream& os, const TokenType& type) {
@@ -63,7 +63,7 @@ inline std::ostream& operator<<(std::ostream& os, const TokenType& type) {
         case TokenType::SUPER:           os << "SUPER";           break;
         case TokenType::RETURN:          os << "RETURN";          break;
         case TokenType::PRINT:           os << "PRINT";           break;
-        case TokenType::_EOF:            os << "_EOF";            break;
+        case TokenType::EOF_:            os << "EOF_";            break;
         default: break;
     }
     return os;
