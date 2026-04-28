@@ -3,6 +3,8 @@
 #include <vector>
 #include "Trynd.h"
 
+#include "Scanner.h"
+
 bool hasError = false;
 
 int main(const int argc, char* argv[]) {
@@ -33,10 +35,10 @@ void runFile(const std::string& path) {
     const std::streampos size = file.tellg();
     file.seekg(0, std::ios::beg);
 
-    std::vector<char> chars(size);
-    file.read(chars.data(), size);
+    std::string source(size, '\0');
+    file.read(source.data(), size);
 
-    for(const auto c : chars) std::cout << c;
+    run(source);
 
     if (hasError) std::exit(EXIT_FAILURE);
 }
@@ -51,8 +53,13 @@ void runPrompt() {
     }
 }
 
-void run(const std::string& line) {
+void run(const std::string& source) {
+    Scanner scanner(source);
+    std::vector<Token> tokens = scanner.scanTokens();
 
+    for (const Token& token : tokens) {
+        std::cout << token << std::endl;
+    }
 }
 
 void error(const int line, const std::string& message) {
@@ -61,4 +68,5 @@ void error(const int line, const std::string& message) {
 
 void report(const int line, const std::string& where, const std::string& message) {
     std::cout << "Error! Line " << line << " (" << where << "): " << message << std::endl;
+    hasError = true;
 }

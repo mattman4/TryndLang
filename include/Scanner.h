@@ -19,6 +19,8 @@ class Scanner {
   void scanToken();
   void addToken(TokenType type);
   void addToken(TokenType type, Literal literal);
+  bool match(char);
+  char peek() const;
 
 public:
   explicit Scanner(std::string);
