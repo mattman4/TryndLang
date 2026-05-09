@@ -1,3 +1,13 @@
 // comment testing
 ((){})
 !*!===<= // test
+
+"literal test"
+"test2"
+123
+123.4
+123.01
+
+test
+if
+iff
