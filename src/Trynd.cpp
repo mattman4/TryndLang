@@ -3,6 +3,8 @@
 #include <vector>
 #include "Trynd.h"
 
+#include "AstPrinter.h"
+#include "Expr.h"
 #include "Scanner.h"
 
 bool hasError = false;
@@ -12,6 +14,19 @@ int main(const int argc, char* argv[]) {
         std::cout << "Usage: trynd [<file>]" << std::endl;
         return EXIT_FAILURE;
     }
+
+    /* AstPrinter printer;
+    const std::string output = printer.print(Expr::Binary(
+        std::make_unique<Expr::Expr>(Expr::Unary(
+            Token(TokenType::MINUS, "-", std::monostate{}, 1),
+            std::make_unique<Expr::Expr>(Expr::LiteralExpr(123))
+        )),
+        Token(TokenType::STAR, "*", std::monostate{}, 1),
+        std::make_unique<Expr::Expr>(Expr::Grouping(
+            std::make_unique<Expr::Expr>(Expr::LiteralExpr(45.67))
+        ))
+    ));
+    std::cout << output << std::endl; */
 
     if(argc == 2) {
         runFile(argv[1]);

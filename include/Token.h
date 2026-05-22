@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <variant>
+#include <sstream>
 
 #include "TokenType.h"
 
@@ -13,14 +14,21 @@ inline std::ostream& operator<<(std::ostream& os, const std::monostate&) {
     return os << "nil";
 }
 
+inline std::string literalToString(const Literal& literal) {
+    std::ostringstream oss;
+    std::visit([&oss](const auto& val) { oss << val; }, literal);
+    return oss.str();
+}
+
 class Token {
     const TokenType type;
-    const std::string lexeme;
     const Literal literal;
     const int line;
 
 public:
-    Token(const TokenType type, std::string lexeme, Literal literal, const int line) : type(type), lexeme(std::move(lexeme)), literal(std::move(literal)), line(line) {}
+    const std::string lexeme;
+
+    Token(const TokenType type, std::string lexeme, Literal literal, const int line) : type(type), literal(std::move(literal)), line(line), lexeme(std::move(lexeme)) {}
 
     friend std::ostream& operator<<(std::ostream& os, const Token& token) {
         os << "Token(" << token.type << ", " << token.lexeme << ", ";
