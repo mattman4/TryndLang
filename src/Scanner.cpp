@@ -32,7 +32,7 @@ void Scanner::string() {
     }
 
     if (isAtEnd()) {
-        error(line, "Unterminated string!");
+        Error::error(line, "Unterminated string!");
         return;
     }
 
@@ -124,7 +124,7 @@ void Scanner::scanToken() {
             } else if (isAlpha(c)) {
                 identifier();
             } else {
-                error(line, "Unexpected character!");
+                Error::error(line, "Unexpected character!");
             }
             break;
     }

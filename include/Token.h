@@ -16,16 +16,16 @@ inline std::ostream& operator<<(std::ostream& os, const std::monostate&) {
 
 inline std::string literalToString(const Literal& literal) {
     std::ostringstream oss;
+    oss << std::boolalpha;
     std::visit([&oss](const auto& val) { oss << val; }, literal);
     return oss.str();
 }
 
 class Token {
+public:
     const TokenType type;
     const Literal literal;
     const int line;
-
-public:
     const std::string lexeme;
 
     Token(const TokenType type, std::string lexeme, Literal literal, const int line) : type(type), literal(std::move(literal)), line(line), lexeme(std::move(lexeme)) {}

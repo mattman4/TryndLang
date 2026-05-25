@@ -4,7 +4,7 @@
 #include "Trynd.h"
 
 #include "AstPrinter.h"
-#include "Expr.h"
+#include "Parser.h"
 #include "Scanner.h"
 
 bool hasError = false;
@@ -70,15 +70,31 @@ void runPrompt() {
 
 void run(const std::string& source) {
     Scanner scanner(source);
-    std::vector<Token> tokens = scanner.scanTokens();
+    const std::vector<Token> tokens = scanner.scanTokens();
+    Parser parser(tokens);
+    const Expr::ExprPtr expr = parser.parse();
 
-    for (const Token& token : tokens) {
+    if (hasError) return;
+
+    std::cout << AstPrinter().print(*expr);
+
+    /*for (const Token& token : tokens) {
         std::cout << token << std::endl;
-    }
+    }*/
 }
 
-void error(const int line, const std::string& message) {
-    report(line, "", message);
+namespace Error {
+    void error(const int line, const std::string& message) {
+        report(line, "", message);
+    }
+
+    void error(const Token& token, const std::string& message) {
+        if (token.type == TokenType::EOF_) {
+            report(token.line, "at end", message);
+        } else {
+            report(token.line, "at '" + token.lexeme + "'", message);
+        }
+    }
 }
 
 void report(const int line, const std::string& where, const std::string& message) {
