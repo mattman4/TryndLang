@@ -8,6 +8,9 @@
 #include "Scanner.h"
 
 bool hasError = false;
+bool hasRuntimeError = false;
+
+Interpreter interpreter;
 
 int main(const int argc, char* argv[]) {
     if(argc > 2) {
@@ -55,7 +58,7 @@ void runFile(const std::string& path) {
 
     run(source);
 
-    if (hasError) std::exit(EXIT_FAILURE);
+    if (hasError || hasRuntimeError) std::exit(EXIT_FAILURE);
 }
 
 void runPrompt() {
@@ -76,11 +79,7 @@ void run(const std::string& source) {
 
     if (hasError) return;
 
-    std::cout << AstPrinter().print(*expr);
-
-    /*for (const Token& token : tokens) {
-        std::cout << token << std::endl;
-    }*/
+    std::cout << literalToString(interpreter.evaluate(*expr)) << std::endl;
 }
 
 namespace Error {
@@ -94,6 +93,11 @@ namespace Error {
         } else {
             report(token.line, "at '" + token.lexeme + "'", message);
         }
+    }
+
+    void runtimeError(const RuntimeError& error) {
+        std::cout << error.what() << std::endl << "[line " << error.token.line << "]" << std::endl;
+        hasRuntimeError = true;
     }
 }
 

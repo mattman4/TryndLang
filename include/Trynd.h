@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "Interpreter.h"
 #include "Token.h"
 
 void runFile(const std::string&);
@@ -12,6 +13,7 @@ void run(const std::string&);
 namespace Error {
     void error(int, const std::string&);
     void error(const Token&, const std::string&);
+    void runtimeError(const RuntimeError&);
 }
 void report(int, const std::string&, const std::string&);
 

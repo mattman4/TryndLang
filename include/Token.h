@@ -1,6 +1,7 @@
 #ifndef TRYND_TOKEN_H
 #define TRYND_TOKEN_H
 
+#include <cmath>
 #include <string>
 #include <utility>
 #include <variant>
@@ -8,13 +9,18 @@
 
 #include "TokenType.h"
 
-using Literal = std::variant<std::monostate, std::string, int, double, bool>;
+using Literal = std::variant<std::monostate, std::string, double, bool>;
 
 inline std::ostream& operator<<(std::ostream& os, const std::monostate&) {
     return os << "nil";
 }
 
 inline std::string literalToString(const Literal& literal) {
+    // Special case for when a double is storing an integer
+    if (std::holds_alternative<double>(literal) && std::get<double>(literal) == std::floor(std::get<double>(literal))) {
+        return std::to_string(static_cast<int>(std::get<double>(literal)));
+    }
+
     std::ostringstream oss;
     oss << std::boolalpha;
     std::visit([&oss](const auto& val) { oss << val; }, literal);

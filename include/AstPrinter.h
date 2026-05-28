@@ -16,10 +16,10 @@ public:
         return std::visit([&](auto& e) { return print(e); }, expr);
     }
 
-    std::string print(const Expr::Binary& expr);
-    std::string print(const Expr::Grouping& expr);
-    static std::string print(const Expr::LiteralExpr& expr);
-    std::string print(const Expr::Unary& expr);
+    std::string print(const Expr::Binary&);
+    std::string print(const Expr::Grouping&);
+    static std::string print(const Expr::LiteralExpr&);
+    std::string print(const Expr::Unary&);
 };
 
 #endif //TRYND_ASTPRINTER_H
