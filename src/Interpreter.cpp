@@ -16,6 +16,15 @@ void Interpreter::checkNumberOperands(const Token& token, const Literal& left, c
     throw RuntimeError(token, "Operands must be numbers.");
 }
 
+void Interpreter::interpret(Expr::Expr& expr) {
+    try {
+        const Literal literal = evaluate(expr);
+        std::cout << literalToString(literal) << std::endl;
+    } catch (RuntimeError& e) {
+        Error::runtimeError(e);
+    }
+}
+
 Literal Interpreter::evaluate(const Expr::Binary& expr) {
     const Literal left = evaluate(*expr.left);
     const Literal right = evaluate(*expr.right);

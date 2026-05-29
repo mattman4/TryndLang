@@ -6,6 +6,7 @@
 #include "AstPrinter.h"
 #include "Parser.h"
 #include "Scanner.h"
+#include "Interpreter.h"
 
 bool hasError = false;
 bool hasRuntimeError = false;
@@ -79,7 +80,7 @@ void run(const std::string& source) {
 
     if (hasError) return;
 
-    std::cout << literalToString(interpreter.evaluate(*expr)) << std::endl;
+    interpreter.interpret(*expr);
 }
 
 namespace Error {
@@ -96,7 +97,7 @@ namespace Error {
     }
 
     void runtimeError(const RuntimeError& error) {
-        std::cout << error.what() << std::endl << "[line " << error.token.line << "]" << std::endl;
+        std::cout << "Error! Line " << error.token.line << ": " << error.what() << std::endl;
         hasRuntimeError = true;
     }
 }

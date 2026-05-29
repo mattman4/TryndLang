@@ -1,6 +1,7 @@
 #ifndef TRYND_INTERPRETER_H
 #define TRYND_INTERPRETER_H
 
+#include "Trynd.h"
 #include "Expr.h"
 
 class RuntimeError : public std::runtime_error {
@@ -15,6 +16,8 @@ class Interpreter {
     static void checkNumberOperand(const Token&, const Literal&);
     static void checkNumberOperands(const Token&, const Literal&, const Literal&);
 public:
+    void interpret(Expr::Expr& expr);
+
     Literal evaluate(Expr::Expr& expr) {
         return std::visit([&](auto& e) { return evaluate(e); }, expr);
     }

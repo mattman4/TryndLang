@@ -3,8 +3,9 @@
 
 #include <string>
 
-#include "Interpreter.h"
 #include "Token.h"
+
+class RuntimeError;
 
 void runFile(const std::string&);
 void runPrompt();
