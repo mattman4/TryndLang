@@ -6,14 +6,22 @@
 #include "Token.h"
 
 namespace Expr {
+    struct Assign;
     struct Binary;
     struct Grouping;
     struct LiteralExpr;
     struct Unary;
     struct Variable;
 
-    using Expr = std::variant<Binary, Grouping, LiteralExpr, Unary, Variable>;
+    using Expr = std::variant<Assign, Binary, Grouping, LiteralExpr, Unary, Variable>;
     using ExprPtr = std::unique_ptr<Expr>;
+
+    struct Assign {
+        const Token name;
+        ExprPtr value;
+
+        Assign(const Token& name, ExprPtr value) : name(name), value(std::move(value)) {}
+    };
 
     struct Binary {
         ExprPtr left;

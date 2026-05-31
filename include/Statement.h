@@ -4,12 +4,19 @@
 #include "Expression.h"
 
 namespace Stmt {
+    struct Block;
     struct Expression;
     struct Print;
     struct Var;
 
-    using Stmt = std::variant<Expression, Print, Var>;
+    using Stmt = std::variant<Block, Expression, Print, Var>;
     using StmtPtr = std::unique_ptr<Stmt>;
+
+    struct Block {
+        std::vector<StmtPtr> statements;
+
+        explicit Block(std::vector<StmtPtr> statements) : statements(std::move(statements)) {}
+    };
 
     struct Expression {
         Expr::ExprPtr expr;

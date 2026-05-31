@@ -16,6 +16,19 @@ void Interpreter::checkNumberOperands(const Token& token, const Literal& left, c
     throw RuntimeError(token, "Operands must be numbers.");
 }
 
+void Interpreter::executeBlock(const std::vector<Stmt::StmtPtr>& statements, Environment* innerEnvironment) {
+    Environment* previous = this->environment;
+    try {
+        this->environment = innerEnvironment;
+
+        for (const Stmt::StmtPtr& stmt : statements) execute(*stmt);
+    } catch (...) {
+        this->environment = previous;
+        throw;
+    }
+    this->environment = previous;
+}
+
 void Interpreter::interpret(const std::vector<Stmt::StmtPtr>& statements) {
     try {
         for (const Stmt::StmtPtr& stmt : statements) {
@@ -24,6 +37,11 @@ void Interpreter::interpret(const std::vector<Stmt::StmtPtr>& statements) {
     } catch (RuntimeError& e) {
         Error::runtimeError(e);
     }
+}
+
+void Interpreter::execute(const Stmt::Block& stmt) {
+    Environment newEnvironment(environment);
+    executeBlock(stmt.statements, &newEnvironment);
 }
 
 void Interpreter::execute(const Stmt::Expression& stmt) {
@@ -42,7 +60,7 @@ void Interpreter::execute(const Stmt::Var& stmt) {
         value = evaluate(*stmt.initialiser);
     }
 
-    environment.define(stmt.name.lexeme, value);
+    environment->define(stmt.name.lexeme, value);
 }
 
 Literal Interpreter::evaluate(const Expr::Binary& expr) {
@@ -119,5 +137,11 @@ Literal Interpreter::evaluate(const Expr::Unary& expr) {
 }
 
 Literal Interpreter::evaluate(const Expr::Variable& expr) {
-    return environment.get(expr.name);
+    return environment->get(expr.name);
+}
+
+Literal Interpreter::evaluate(const Expr::Assign& expr) {
+    const Literal value = evaluate(*expr.value);
+    environment->assign(expr.name, value);
+    return value;
 }

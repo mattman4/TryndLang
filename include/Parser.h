@@ -20,11 +20,13 @@ class Parser {
     Stmt::StmtPtr declaration();
     Stmt::StmtPtr statement();
     Stmt::StmtPtr printStatement();
+    std::vector<Stmt::StmtPtr> block();
     Stmt::StmtPtr expressionStatement();
     Stmt::StmtPtr varDeclaration();
 
     // Expressions
     Expr::ExprPtr expression();
+    Expr::ExprPtr assignment();
     Expr::ExprPtr equality();
     Expr::ExprPtr comparison();
     Expr::ExprPtr term();

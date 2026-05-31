@@ -91,6 +91,7 @@ Stmt::StmtPtr Parser::declaration() {
 
 Stmt::StmtPtr Parser::statement() {
     if (match({TokenType::PRINT})) return printStatement();
+    if (match({TokenType::LEFT_BRACE})) return std::make_unique<Stmt::Stmt>(Stmt::Block(block()));
     return expressionStatement();
 }
 
@@ -98,6 +99,17 @@ Stmt::StmtPtr Parser::printStatement() {
     Expr::ExprPtr expr = expression();
     consume(TokenType::SEMI_COLON, "Expected ';' after expression.");
     return std::make_unique<Stmt::Stmt>(Stmt::Print(std::move(expr)));
+}
+
+std::vector<Stmt::StmtPtr> Parser::block() {
+    std::vector<Stmt::StmtPtr> statements;
+
+    while (!check(TokenType::RIGHT_BRACE) && !isAtEnd()) {
+        statements.push_back(declaration());
+    }
+
+    consume(TokenType::RIGHT_BRACE, "Expected '}' after block.");
+    return statements;
 }
 
 Stmt::StmtPtr Parser::expressionStatement() {
@@ -119,7 +131,25 @@ Stmt::StmtPtr Parser::varDeclaration() {
 }
 
 Expr::ExprPtr Parser::expression() {
-    return equality();
+    return assignment();
+}
+
+Expr::ExprPtr Parser::assignment() {
+    Expr::ExprPtr expr = equality();
+
+    if (match({TokenType::EQUAL})) {
+        const Token equals = previous();
+        Expr::ExprPtr value = assignment();
+
+        if (std::holds_alternative<Expr::Variable>(*expr)) {
+            const Token name = std::get<Expr::Variable>(*expr).name;
+            return std::make_unique<Expr::Expr>(Expr::Assign(name, std::move(value)));
+        }
+
+        error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
 }
 
 Expr::ExprPtr Parser::equality() {

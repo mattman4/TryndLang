@@ -15,13 +15,18 @@ public:
 };
 
 class Interpreter {
-    Environment environment;
+    Environment* environment;
+    Environment globalEnvironment;
 
     static bool isTruthy(const Literal&);
 
     static void checkNumberOperand(const Token&, const Literal&);
     static void checkNumberOperands(const Token&, const Literal&, const Literal&);
+
+    void executeBlock(const std::vector<Stmt::StmtPtr>&, Environment*);
 public:
+    Interpreter() : environment(&globalEnvironment) {}
+
     void interpret(const std::vector<Stmt::StmtPtr>&);
 
     Literal evaluate(const Expr::Expr& expr) {
@@ -33,6 +38,7 @@ public:
     }
 
     // Statements
+    void execute(const Stmt::Block&);
     void execute(const Stmt::Expression&);
     void execute(const Stmt::Print&);
     void execute(const Stmt::Var&);
@@ -43,6 +49,7 @@ public:
     static Literal evaluate(const Expr::LiteralExpr&);
     Literal evaluate(const Expr::Unary&);
     Literal evaluate(const Expr::Variable&);
+    Literal evaluate(const Expr::Assign&);
 };
 
 #endif //TRYND_INTERPRETER_H
