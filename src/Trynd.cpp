@@ -3,7 +3,6 @@
 #include <vector>
 #include "Trynd.h"
 
-#include "AstPrinter.h"
 #include "Parser.h"
 #include "Scanner.h"
 #include "Interpreter.h"
@@ -18,19 +17,6 @@ int main(const int argc, char* argv[]) {
         std::cout << "Usage: trynd [<file>]" << std::endl;
         return EXIT_FAILURE;
     }
-
-    /* AstPrinter printer;
-    const std::string output = printer.print(Expr::Binary(
-        std::make_unique<Expr::Expr>(Expr::Unary(
-            Token(TokenType::MINUS, "-", std::monostate{}, 1),
-            std::make_unique<Expr::Expr>(Expr::LiteralExpr(123))
-        )),
-        Token(TokenType::STAR, "*", std::monostate{}, 1),
-        std::make_unique<Expr::Expr>(Expr::Grouping(
-            std::make_unique<Expr::Expr>(Expr::LiteralExpr(45.67))
-        ))
-    ));
-    std::cout << output << std::endl; */
 
     if(argc == 2) {
         runFile(argv[1]);
@@ -76,11 +62,11 @@ void run(const std::string& source) {
     Scanner scanner(source);
     const std::vector<Token> tokens = scanner.scanTokens();
     Parser parser(tokens);
-    const Expr::ExprPtr expr = parser.parse();
+    const std::vector<Stmt::StmtPtr> statements = parser.parse();
 
     if (hasError) return;
 
-    interpreter.interpret(*expr);
+    interpreter.interpret(statements);
 }
 
 namespace Error {

@@ -3,8 +3,9 @@
 
 #include <vector>
 
-#include "Expr.h"
+#include "Expression.h"
 #include "Token.h"
+#include "Statement.h"
 
 class ParseError : public std::runtime_error {
 public:
@@ -15,6 +16,14 @@ class Parser {
     std::vector<Token> tokens;
     int current = 0;
 
+    // Statements
+    Stmt::StmtPtr declaration();
+    Stmt::StmtPtr statement();
+    Stmt::StmtPtr printStatement();
+    Stmt::StmtPtr expressionStatement();
+    Stmt::StmtPtr varDeclaration();
+
+    // Expressions
     Expr::ExprPtr expression();
     Expr::ExprPtr equality();
     Expr::ExprPtr comparison();
@@ -37,7 +46,7 @@ class Parser {
 
 public:
     explicit Parser(const std::vector<Token>& tokens) : tokens(tokens) {}
-    Expr::ExprPtr parse();
+    std::vector<Stmt::StmtPtr> parse();
 };
 
 #endif //TRYND_PARSER_H

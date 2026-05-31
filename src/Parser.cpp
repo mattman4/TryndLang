@@ -1,12 +1,14 @@
 #include "Parser.h"
+
 #include "Trynd.h"
 
-Expr::ExprPtr Parser::parse() {
-    try {
-        return expression();
-    } catch (const ParseError&) {
-        return nullptr;
+std::vector<Stmt::StmtPtr> Parser::parse() {
+    std::vector<Stmt::StmtPtr> statements;
+    while (!isAtEnd()) {
+        statements.push_back(declaration());
     }
+
+    return statements;
 }
 
 bool Parser::isAtEnd() {
@@ -77,6 +79,44 @@ Token Parser::consume(TokenType type, const std::string& message) {
     throw error(peek(), message);
 }
 
+Stmt::StmtPtr Parser::declaration() {
+    try {
+        if (match({TokenType::VAR})) return varDeclaration();
+        return statement();
+    } catch (const ParseError&) {
+        synchronise();
+        return nullptr;
+    }
+}
+
+Stmt::StmtPtr Parser::statement() {
+    if (match({TokenType::PRINT})) return printStatement();
+    return expressionStatement();
+}
+
+Stmt::StmtPtr Parser::printStatement() {
+    Expr::ExprPtr expr = expression();
+    consume(TokenType::SEMI_COLON, "Expected ';' after expression.");
+    return std::make_unique<Stmt::Stmt>(Stmt::Print(std::move(expr)));
+}
+
+Stmt::StmtPtr Parser::expressionStatement() {
+    Expr::ExprPtr expr = expression();
+    consume(TokenType::SEMI_COLON, "Expected ';' after expression.");
+    return std::make_unique<Stmt::Stmt>(Stmt::Expression(std::move(expr)));
+}
+
+Stmt::StmtPtr Parser::varDeclaration() {
+    const Token name = consume(TokenType::IDENTIFIER, "Expected variable name.");
+
+    Expr::ExprPtr initialiser = nullptr;
+    if (match({TokenType::EQUAL})) {
+        initialiser = expression();
+    }
+
+    consume(TokenType::SEMI_COLON, "Expected ';' after variable declaration.");
+    return std::make_unique<Stmt::Stmt>(Stmt::Var(name, std::move(initialiser)));
+}
 
 Expr::ExprPtr Parser::expression() {
     return equality();
@@ -145,6 +185,7 @@ Expr::ExprPtr Parser::primary() {
     if (match({TokenType::FALSE})) return std::make_unique<Expr::Expr>(Expr::LiteralExpr(false));
     if (match({TokenType::NIL})) return std::make_unique<Expr::Expr>(Expr::LiteralExpr(std::monostate()));
     if (match({TokenType::NUMBER, TokenType::STRING})) return std::make_unique<Expr::Expr>(Expr::LiteralExpr(previous().literal));
+    if (match({TokenType::IDENTIFIER})) return std::make_unique<Expr::Expr>(Expr::Variable(previous()));
     if (match({TokenType::LEFT_BRACKET})) {
         Expr::ExprPtr expr = expression();
         consume(TokenType::RIGHT_BRACKET, "Expected ')' after expression.");

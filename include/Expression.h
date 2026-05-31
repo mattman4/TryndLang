@@ -10,8 +10,9 @@ namespace Expr {
     struct Grouping;
     struct LiteralExpr;
     struct Unary;
+    struct Variable;
 
-    using Expr = std::variant<Binary, Grouping, LiteralExpr, Unary>;
+    using Expr = std::variant<Binary, Grouping, LiteralExpr, Unary, Variable>;
     using ExprPtr = std::unique_ptr<Expr>;
 
     struct Binary {
@@ -39,6 +40,12 @@ namespace Expr {
         ExprPtr right;
 
         Unary(const Token& op, ExprPtr right) : op(op), right(std::move(right)) {}
+    };
+
+    struct Variable {
+        const Token name;
+
+        explicit Variable(const Token& name) : name(name) {}
     };
 }
 

@@ -16,13 +16,33 @@ void Interpreter::checkNumberOperands(const Token& token, const Literal& left, c
     throw RuntimeError(token, "Operands must be numbers.");
 }
 
-void Interpreter::interpret(Expr::Expr& expr) {
+void Interpreter::interpret(const std::vector<Stmt::StmtPtr>& statements) {
     try {
-        const Literal literal = evaluate(expr);
-        std::cout << literalToString(literal) << std::endl;
+        for (const Stmt::StmtPtr& stmt : statements) {
+            execute(*stmt);
+        }
     } catch (RuntimeError& e) {
         Error::runtimeError(e);
     }
+}
+
+void Interpreter::execute(const Stmt::Expression& stmt) {
+    evaluate(*stmt.expr);
+}
+
+void Interpreter::execute(const Stmt::Print& stmt) {
+    const Literal literal = evaluate(*stmt.expr);
+    std::cout << literalToString(literal) << std::endl;
+}
+
+void Interpreter::execute(const Stmt::Var& stmt) {
+    Literal value = std::monostate();
+
+    if (stmt.initialiser != nullptr) {
+        value = evaluate(*stmt.initialiser);
+    }
+
+    environment.define(stmt.name.lexeme, value);
 }
 
 Literal Interpreter::evaluate(const Expr::Binary& expr) {
@@ -96,4 +116,8 @@ Literal Interpreter::evaluate(const Expr::Unary& expr) {
     }
 
     return std::monostate();
+}
+
+Literal Interpreter::evaluate(const Expr::Variable& expr) {
+    return environment.get(expr.name);
 }
