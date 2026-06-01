@@ -48,6 +48,14 @@ void Interpreter::execute(const Stmt::Expression& stmt) {
     evaluate(*stmt.expr);
 }
 
+void Interpreter::execute(const Stmt::If& stmt) {
+    if (isTruthy(evaluate(*stmt.condition))) {
+        execute(*stmt.thenBranch);
+    } else if (stmt.elseBranch != nullptr) {
+        execute(*stmt.elseBranch);
+    }
+}
+
 void Interpreter::execute(const Stmt::Print& stmt) {
     const Literal literal = evaluate(*stmt.expr);
     std::cout << literalToString(literal) << std::endl;
@@ -61,6 +69,12 @@ void Interpreter::execute(const Stmt::Var& stmt) {
     }
 
     environment->define(stmt.name.lexeme, value);
+}
+
+void Interpreter::execute(const Stmt::While& stmt) {
+    while (isTruthy(evaluate(*stmt.condition))) {
+        execute(*stmt.body);
+    }
 }
 
 Literal Interpreter::evaluate(const Expr::Binary& expr) {
@@ -118,6 +132,18 @@ Literal Interpreter::evaluate(const Expr::Grouping& expr) {
 
 Literal Interpreter::evaluate(const Expr::LiteralExpr& expr) {
     return expr.literal;
+}
+
+Literal Interpreter::evaluate(const Expr::Logical& expr) {
+    Literal left = evaluate(*expr.left);
+
+    if (expr.op.type == TokenType::OR) {
+        if (isTruthy(left)) return left;
+    } else { // AND
+        if (!isTruthy(left)) return left;
+    }
+
+    return evaluate(*expr.right);
 }
 
 Literal Interpreter::evaluate(const Expr::Unary& expr) {

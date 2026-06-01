@@ -40,13 +40,16 @@ public:
     // Statements
     void execute(const Stmt::Block&);
     void execute(const Stmt::Expression&);
+    void execute(const Stmt::If&);
     void execute(const Stmt::Print&);
     void execute(const Stmt::Var&);
+    void execute(const Stmt::While&);
 
     // Expressions
     Literal evaluate(const Expr::Binary&);
     Literal evaluate(const Expr::Grouping&);
     static Literal evaluate(const Expr::LiteralExpr&);
+    Literal evaluate(const Expr::Logical&);
     Literal evaluate(const Expr::Unary&);
     Literal evaluate(const Expr::Variable&);
     Literal evaluate(const Expr::Assign&);

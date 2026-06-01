@@ -90,9 +90,26 @@ Stmt::StmtPtr Parser::declaration() {
 }
 
 Stmt::StmtPtr Parser::statement() {
+    if (match({TokenType::FOR})) return forStatement();
+    if (match({TokenType::IF})) return ifStatement();
     if (match({TokenType::PRINT})) return printStatement();
+    if (match({TokenType::WHILE})) return whileStatement();
     if (match({TokenType::LEFT_BRACE})) return std::make_unique<Stmt::Stmt>(Stmt::Block(block()));
     return expressionStatement();
+}
+
+Stmt::StmtPtr Parser::ifStatement() {
+    consume(TokenType::LEFT_BRACKET, "Expected '(' after if.");
+    Expr::ExprPtr condition = expression();
+    consume(TokenType::RIGHT_BRACKET, "Expected ')' after if condition.");
+
+    Stmt::StmtPtr thenBranch = statement();
+    Stmt::StmtPtr elseBranch = nullptr;
+    if (match({TokenType::ELSE})) {
+        elseBranch = statement();
+    }
+
+    return std::make_unique<Stmt::Stmt>(Stmt::If(std::move(condition), std::move(thenBranch), std::move(elseBranch)));
 }
 
 Stmt::StmtPtr Parser::printStatement() {
@@ -130,12 +147,68 @@ Stmt::StmtPtr Parser::varDeclaration() {
     return std::make_unique<Stmt::Stmt>(Stmt::Var(name, std::move(initialiser)));
 }
 
+Stmt::StmtPtr Parser::whileStatement() {
+    consume(TokenType::LEFT_BRACKET, "Expected '(' after while.");
+    Expr::ExprPtr condition = expression();
+    consume(TokenType::RIGHT_BRACKET, "Expected ')' after while condition.");
+
+    Stmt::StmtPtr body = statement();
+
+    return std::make_unique<Stmt::Stmt>(Stmt::While(std::move(condition), std::move(body)));
+}
+
+Stmt::StmtPtr Parser::forStatement() {
+    consume(TokenType::LEFT_BRACKET, "Expected '(' after for.");
+
+    Stmt::StmtPtr initialiser;
+    if (match({TokenType::SEMI_COLON})) {
+        initialiser = nullptr;
+    } else if (match({TokenType::VAR})) {
+        initialiser = varDeclaration();
+    } else {
+        initialiser = expressionStatement();
+    }
+
+    Expr::ExprPtr condition = nullptr;
+    if (!check(TokenType::SEMI_COLON)) {
+        condition = expression();
+    }
+    consume(TokenType::SEMI_COLON, "Expected ';' after for condition.");
+
+    Expr::ExprPtr increment = nullptr;
+    if (!check(TokenType::RIGHT_BRACKET)) {
+        increment = expression();
+    }
+    consume(TokenType::RIGHT_BRACKET, "Expected ')' after for clauses.");
+
+    Stmt::StmtPtr body = statement();
+
+    if (increment != nullptr) {
+        std::vector<Stmt::StmtPtr> statements;
+        statements.push_back(std::move(body));
+        statements.push_back(std::make_unique<Stmt::Stmt>(Stmt::Expression(std::move(increment))));
+        body = std::make_unique<Stmt::Stmt>(Stmt::Block(std::move(statements)));
+    }
+
+    if (condition == nullptr) condition = std::make_unique<Expr::Expr>(Expr::LiteralExpr(true));
+    body = std::make_unique<Stmt::Stmt>(Stmt::While(std::move(condition), std::move(body)));
+
+    if (initialiser != nullptr) {
+        std::vector<Stmt::StmtPtr> statements;
+        statements.push_back(std::move(initialiser));
+        statements.push_back(std::move(body));
+        body = std::make_unique<Stmt::Stmt>(Stmt::Block(std::move(statements)));
+    }
+
+    return body;
+}
+
 Expr::ExprPtr Parser::expression() {
     return assignment();
 }
 
 Expr::ExprPtr Parser::assignment() {
-    Expr::ExprPtr expr = equality();
+    Expr::ExprPtr expr = or_();
 
     if (match({TokenType::EQUAL})) {
         const Token equals = previous();
@@ -147,6 +220,30 @@ Expr::ExprPtr Parser::assignment() {
         }
 
         error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
+}
+
+Expr::ExprPtr Parser::or_() {
+    Expr::ExprPtr expr = and_();
+
+    while (match({TokenType::OR})) {
+        Token op = previous();
+        Expr::ExprPtr right = and_();
+        expr = std::make_unique<Expr::Expr>(Expr::Logical(std::move(expr), op, std::move(right)));
+    }
+
+    return expr;
+}
+
+Expr::ExprPtr Parser::and_() {
+    Expr::ExprPtr expr = equality();
+
+    while (match({TokenType::AND})) {
+        Token op = previous();
+        Expr::ExprPtr right = equality();
+        expr = std::make_unique<Expr::Expr>(Expr::Logical(std::move(expr), op, std::move(right)));
     }
 
     return expr;

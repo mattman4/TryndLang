@@ -10,10 +10,11 @@ namespace Expr {
     struct Binary;
     struct Grouping;
     struct LiteralExpr;
+    struct Logical;
     struct Unary;
     struct Variable;
 
-    using Expr = std::variant<Assign, Binary, Grouping, LiteralExpr, Unary, Variable>;
+    using Expr = std::variant<Assign, Binary, Grouping, LiteralExpr, Logical, Unary, Variable>;
     using ExprPtr = std::unique_ptr<Expr>;
 
     struct Assign {
@@ -41,6 +42,14 @@ namespace Expr {
         const Literal literal;
 
         explicit LiteralExpr(const Literal& literal) : literal(literal) {}
+    };
+
+    struct Logical {
+        ExprPtr left;
+        const Token op;
+        ExprPtr right;
+
+        Logical(ExprPtr left, const Token& op, ExprPtr right) : left(std::move(left)), op(op), right(std::move(right)) {}
     };
 
     struct Unary {
