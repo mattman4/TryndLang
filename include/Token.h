@@ -7,9 +7,9 @@
 #include <variant>
 #include <sstream>
 
+#include "Literal.h"
+#include "Callable.h"
 #include "TokenType.h"
-
-using Literal = std::variant<std::monostate, std::string, double, bool>;
 
 inline std::ostream& operator<<(std::ostream& os, const std::monostate&) {
     return os << "nil";

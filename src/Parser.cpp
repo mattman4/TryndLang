@@ -79,8 +79,25 @@ Token Parser::consume(TokenType type, const std::string& message) {
     throw error(peek(), message);
 }
 
+Expr::ExprPtr Parser::finishCall(Expr::ExprPtr callee) {
+    std::vector<Expr::ExprPtr> arguments;
+    if (!check(TokenType::RIGHT_BRACKET)) {
+        do {
+            if (arguments.size() >= 255) {
+                error(peek(), "Cannot have more than 255 arguments in a function.");
+            }
+            arguments.push_back(expression());
+        } while (match({TokenType::COMMA}));
+    }
+
+    const Token paren = consume(TokenType::RIGHT_BRACKET, "Expected ')' after function arguments.");
+
+    return std::make_unique<Expr::Expr>(Expr::Call(std::move(callee), paren, std::move(arguments)));
+}
+
 Stmt::StmtPtr Parser::declaration() {
     try {
+        if (match({TokenType::FUNC})) return function("function");
         if (match({TokenType::VAR})) return varDeclaration();
         return statement();
     } catch (const ParseError&) {
@@ -133,6 +150,28 @@ Stmt::StmtPtr Parser::expressionStatement() {
     Expr::ExprPtr expr = expression();
     consume(TokenType::SEMI_COLON, "Expected ';' after expression.");
     return std::make_unique<Stmt::Stmt>(Stmt::Expression(std::move(expr)));
+}
+
+Stmt::StmtPtr Parser::function(const std::string& kind) {
+    const Token name = consume(TokenType::IDENTIFIER, "Expected " + kind + " name.");
+    consume(TokenType::LEFT_BRACKET, "Expected '(' after " + kind + " name.");
+
+    std::vector<Token> parameters;
+    if (!check(TokenType::RIGHT_BRACKET)) {
+        do {
+            if (parameters.size() >= 255) {
+                error(peek(), "Cannot have more than 255 parameters in a function.");
+            }
+            parameters.push_back(consume(TokenType::IDENTIFIER, "Expected parameter name."));
+        } while (match({TokenType::COMMA}));
+    }
+
+    consume(TokenType::RIGHT_BRACKET, "Expected ')' after " + kind + " name.");
+
+    consume(TokenType::LEFT_BRACE, "Expected '{' before " + kind + " body.");
+    std::vector<Stmt::StmtPtr> body = block();
+
+    return std::make_unique<Stmt::Stmt>(Stmt::Function(name, std::move(parameters), std::move(body)));
 }
 
 Stmt::StmtPtr Parser::varDeclaration() {
@@ -304,7 +343,21 @@ Expr::ExprPtr Parser::unary() {
         return std::make_unique<Expr::Expr>(Expr::Unary(op, std::move(right)));
     }
 
-    return primary();
+    return call();
+}
+
+Expr::ExprPtr Parser::call() {
+    Expr::ExprPtr expr = primary();
+
+    for (;;) {
+        if (match({TokenType::LEFT_BRACKET})) {
+            expr = finishCall(std::move(expr));
+        } else {
+            break;
+        }
+    }
+
+    return expr;
 }
 
 Expr::ExprPtr Parser::primary() {

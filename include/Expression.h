@@ -8,13 +8,14 @@
 namespace Expr {
     struct Assign;
     struct Binary;
+    struct Call;
     struct Grouping;
     struct LiteralExpr;
     struct Logical;
     struct Unary;
     struct Variable;
 
-    using Expr = std::variant<Assign, Binary, Grouping, LiteralExpr, Logical, Unary, Variable>;
+    using Expr = std::variant<Assign, Binary, Call, Grouping, LiteralExpr, Logical, Unary, Variable>;
     using ExprPtr = std::unique_ptr<Expr>;
 
     struct Assign {
@@ -30,6 +31,14 @@ namespace Expr {
         ExprPtr right;
 
         Binary(ExprPtr left, const Token& op, ExprPtr right) : left(std::move(left)), op(op), right(std::move(right)) {}
+    };
+
+    struct Call {
+        ExprPtr callee;
+        const Token paren;
+        std::vector<ExprPtr> arguments;
+
+        Call(ExprPtr callee, const Token& paren, std::vector<ExprPtr> arguments) : callee(std::move(callee)), paren(paren), arguments(std::move(arguments)) {}
     };
 
     struct Grouping {

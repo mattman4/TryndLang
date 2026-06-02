@@ -126,6 +126,27 @@ Literal Interpreter::evaluate(const Expr::Binary& expr) {
     return false;
 }
 
+Literal Interpreter::evaluate(const Expr::Call& expr) {
+    Literal callee = evaluate(*expr.callee);
+
+    std::vector<Literal> arguments;
+    arguments.reserve(expr.arguments.size());
+    for (const Expr::ExprPtr& argument : expr.arguments) {
+        arguments.push_back(evaluate(*argument));
+    }
+
+    if (!std::holds_alternative<Callable*>(callee)) {
+        throw RuntimeError(expr.paren, "Can only call functions and classes.");
+    }
+
+    Callable* function = std::get<Callable*>(callee);
+    if (arguments.size() != function->arity()) {
+        throw RuntimeError(expr.paren, "Expected " + std::to_string(function->arity()) + " arguments but got " + std::to_string(arguments.size()) + ".");
+    }
+    
+    return function->call(*this, arguments);
+}
+
 Literal Interpreter::evaluate(const Expr::Grouping& expr) {
     return evaluate(*expr.expr);
 }

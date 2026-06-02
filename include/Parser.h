@@ -20,6 +20,7 @@ class Parser {
     Stmt::StmtPtr declaration();
     Stmt::StmtPtr statement();
     Stmt::StmtPtr expressionStatement();
+    Stmt::StmtPtr function(const std::string&);
     Stmt::StmtPtr forStatement();
     Stmt::StmtPtr ifStatement();
     Stmt::StmtPtr printStatement();
@@ -37,8 +38,10 @@ class Parser {
     Expr::ExprPtr term();
     Expr::ExprPtr factor();
     Expr::ExprPtr unary();
+    Expr::ExprPtr call();
     Expr::ExprPtr primary();
 
+    Expr::ExprPtr finishCall(Expr::ExprPtr);
     bool match(std::initializer_list<TokenType>);
     bool check(TokenType);
     Token advance();

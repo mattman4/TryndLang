@@ -2,6 +2,7 @@
 #define TRYND_INTERPRETER_H
 
 #include <vector>
+#include <chrono>
 
 #include "Environment.h"
 #include "Trynd.h"
@@ -14,18 +15,30 @@ public:
     explicit RuntimeError(const Token& token, const std::string& message) : std::runtime_error(message), token(token) {}
 };
 
+class ClockCallable : public Callable {
+public:
+    int arity() override { return 0; }
+    Literal call(const Interpreter& interpreter, std::vector<Literal> args) override {
+        return static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) / 1000.0;
+    }
+};
+
 class Interpreter {
     Environment* environment;
     Environment globalEnvironment;
 
-    static bool isTruthy(const Literal&);
+    // Native functions
+    ClockCallable clockCallable;
 
+    static bool isTruthy(const Literal&);
     static void checkNumberOperand(const Token&, const Literal&);
     static void checkNumberOperands(const Token&, const Literal&, const Literal&);
 
     void executeBlock(const std::vector<Stmt::StmtPtr>&, Environment*);
 public:
-    Interpreter() : environment(&globalEnvironment) {}
+    Interpreter() : environment(&globalEnvironment) {
+        globalEnvironment.define("clock", &clockCallable);
+    }
 
     void interpret(const std::vector<Stmt::StmtPtr>&);
 
@@ -47,6 +60,7 @@ public:
 
     // Expressions
     Literal evaluate(const Expr::Binary&);
+    Literal evaluate(const Expr::Call&);
     Literal evaluate(const Expr::Grouping&);
     static Literal evaluate(const Expr::LiteralExpr&);
     Literal evaluate(const Expr::Logical&);

@@ -6,12 +6,13 @@
 namespace Stmt {
     struct Block;
     struct Expression;
+    struct Function;
     struct If;
     struct Print;
     struct Var;
     struct While;
 
-    using Stmt = std::variant<Block, Expression, If, Print, Var, While>;
+    using Stmt = std::variant<Block, Expression, Function, If, Print, Var, While>;
     using StmtPtr = std::unique_ptr<Stmt>;
 
     struct Block {
@@ -24,6 +25,14 @@ namespace Stmt {
         Expr::ExprPtr expr;
 
         explicit Expression(Expr::ExprPtr expr) : expr(std::move(expr)) {}
+    };
+
+    struct Function {
+        const Token name;
+        std::vector<Token> params;
+        std::shared_ptr<std::vector<StmtPtr>> body;
+
+        Function(const Token& name, std::vector<Token> params, std::vector<StmtPtr> body) : name(name), params(std::move(params)), body(std::make_shared<std::vector<StmtPtr>>(std::move(body))) {}
     };
 
     struct If {
