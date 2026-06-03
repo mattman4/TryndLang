@@ -18,14 +18,13 @@ public:
 class ClockCallable : public Callable {
 public:
     int arity() override { return 0; }
-    Literal call(const Interpreter& interpreter, std::vector<Literal> args) override {
+    Literal call(Interpreter& interpreter, std::vector<Literal> args) override {
         return static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) / 1000.0;
     }
 };
 
 class Interpreter {
     Environment* environment;
-    Environment globalEnvironment;
 
     // Native functions
     ClockCallable clockCallable;
@@ -34,10 +33,10 @@ class Interpreter {
     static void checkNumberOperand(const Token&, const Literal&);
     static void checkNumberOperands(const Token&, const Literal&, const Literal&);
 
-    void executeBlock(const std::vector<Stmt::StmtPtr>&, Environment*);
 public:
+    Environment globalEnvironment;
     Interpreter() : environment(&globalEnvironment) {
-        globalEnvironment.define("clock", &clockCallable);
+        globalEnvironment.define("clock", std::make_shared<ClockCallable>(clockCallable));
     }
 
     void interpret(const std::vector<Stmt::StmtPtr>&);
@@ -53,10 +52,12 @@ public:
     // Statements
     void execute(const Stmt::Block&);
     void execute(const Stmt::Expression&);
+    void execute(const Stmt::Function&);
     void execute(const Stmt::If&);
     void execute(const Stmt::Print&);
     void execute(const Stmt::Var&);
     void execute(const Stmt::While&);
+    void executeBlock(const std::vector<Stmt::StmtPtr>&, Environment*);
 
     // Expressions
     Literal evaluate(const Expr::Binary&);

@@ -10,7 +10,7 @@ class Callable {
 public:
     virtual ~Callable() = default;
     virtual int arity() = 0;
-    virtual Literal call(const Interpreter&, std::vector<Literal>) = 0;
+    virtual Literal call(Interpreter&, std::vector<Literal>) = 0;
 };
 
 #endif //TRYND_CALLABLE_H

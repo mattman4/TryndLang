@@ -1,5 +1,7 @@
 #include "Interpreter.h"
 
+#include "Function.h"
+
 bool Interpreter::isTruthy(const Literal& literal) {
     if (std::holds_alternative<std::monostate>(literal)) return false;
     if (std::holds_alternative<bool>(literal)) return std::get<bool>(literal);
@@ -46,6 +48,11 @@ void Interpreter::execute(const Stmt::Block& stmt) {
 
 void Interpreter::execute(const Stmt::Expression& stmt) {
     evaluate(*stmt.expr);
+}
+
+void Interpreter::execute(const Stmt::Function& stmt) {
+    const std::shared_ptr<Function> function = std::make_shared<Function>(stmt);
+    environment->define(stmt.name.lexeme, function);
 }
 
 void Interpreter::execute(const Stmt::If& stmt) {
@@ -127,7 +134,7 @@ Literal Interpreter::evaluate(const Expr::Binary& expr) {
 }
 
 Literal Interpreter::evaluate(const Expr::Call& expr) {
-    Literal callee = evaluate(*expr.callee);
+    const Literal callee = evaluate(*expr.callee);
 
     std::vector<Literal> arguments;
     arguments.reserve(expr.arguments.size());
@@ -135,11 +142,11 @@ Literal Interpreter::evaluate(const Expr::Call& expr) {
         arguments.push_back(evaluate(*argument));
     }
 
-    if (!std::holds_alternative<Callable*>(callee)) {
+    if (!std::holds_alternative<std::shared_ptr<Callable>>(callee)) {
         throw RuntimeError(expr.paren, "Can only call functions and classes.");
     }
 
-    Callable* function = std::get<Callable*>(callee);
+    const std::shared_ptr<Callable> function = std::get<std::shared_ptr<Callable>>(callee);
     if (arguments.size() != function->arity()) {
         throw RuntimeError(expr.paren, "Expected " + std::to_string(function->arity()) + " arguments but got " + std::to_string(arguments.size()) + ".");
     }
