@@ -110,6 +110,7 @@ Stmt::StmtPtr Parser::statement() {
     if (match({TokenType::FOR})) return forStatement();
     if (match({TokenType::IF})) return ifStatement();
     if (match({TokenType::PRINT})) return printStatement();
+    if (match({TokenType::RETURN})) return returnStatement();
     if (match({TokenType::WHILE})) return whileStatement();
     if (match({TokenType::LEFT_BRACE})) return std::make_unique<Stmt::Stmt>(Stmt::Block(block()));
     return expressionStatement();
@@ -133,6 +134,18 @@ Stmt::StmtPtr Parser::printStatement() {
     Expr::ExprPtr expr = expression();
     consume(TokenType::SEMI_COLON, "Expected ';' after expression.");
     return std::make_unique<Stmt::Stmt>(Stmt::Print(std::move(expr)));
+}
+
+Stmt::StmtPtr Parser::returnStatement() {
+    const Token keyword = previous();
+    Expr::ExprPtr value = nullptr;
+
+    if (!check(TokenType::SEMI_COLON)) {
+        value = expression();
+    }
+
+    consume(TokenType::SEMI_COLON, "Expected ';' after return.");
+    return std::make_unique<Stmt::Stmt>(Stmt::Return(keyword, std::move(value)));
 }
 
 std::vector<Stmt::StmtPtr> Parser::block() {

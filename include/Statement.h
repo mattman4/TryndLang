@@ -9,10 +9,11 @@ namespace Stmt {
     struct Function;
     struct If;
     struct Print;
+    struct Return;
     struct Var;
     struct While;
 
-    using Stmt = std::variant<Block, Expression, Function, If, Print, Var, While>;
+    using Stmt = std::variant<Block, Expression, Function, If, Print, Return, Var, While>;
     using StmtPtr = std::unique_ptr<Stmt>;
 
     struct Block {
@@ -47,6 +48,13 @@ namespace Stmt {
         Expr::ExprPtr expr;
 
         explicit Print(Expr::ExprPtr expr) : expr(std::move(expr)) {}
+    };
+
+    struct Return {
+        const Token keyword;
+        Expr::ExprPtr value;
+
+        Return(const Token& keyword, Expr::ExprPtr value) : keyword(keyword), value(std::move(value)) {}
     };
 
     struct Var {

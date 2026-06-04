@@ -15,6 +15,12 @@ public:
     explicit RuntimeError(const Token& token, const std::string& message) : std::runtime_error(message), token(token) {}
 };
 
+class Return : public std::runtime_error {
+public:
+    const Literal value;
+    explicit Return(const Literal& value) : std::runtime_error(""), value(value) {}
+};
+
 class ClockCallable : public Callable {
 public:
     int arity() override { return 0; }
@@ -24,7 +30,7 @@ public:
 };
 
 class Interpreter {
-    Environment* environment;
+    std::shared_ptr<Environment> environment;
 
     // Native functions
     ClockCallable clockCallable;
@@ -34,9 +40,11 @@ class Interpreter {
     static void checkNumberOperands(const Token&, const Literal&, const Literal&);
 
 public:
-    Environment globalEnvironment;
-    Interpreter() : environment(&globalEnvironment) {
-        globalEnvironment.define("clock", std::make_shared<ClockCallable>(clockCallable));
+    std::shared_ptr<Environment> globalEnvironment;
+    Interpreter() {
+        globalEnvironment = std::make_shared<Environment>();
+        environment = globalEnvironment;
+        globalEnvironment->define("clock", std::make_shared<ClockCallable>(clockCallable));
     }
 
     void interpret(const std::vector<Stmt::StmtPtr>&);
@@ -55,9 +63,10 @@ public:
     void execute(const Stmt::Function&);
     void execute(const Stmt::If&);
     void execute(const Stmt::Print&);
+    void execute(const Stmt::Return&);
     void execute(const Stmt::Var&);
     void execute(const Stmt::While&);
-    void executeBlock(const std::vector<Stmt::StmtPtr>&, Environment*);
+    void executeBlock(const std::vector<Stmt::StmtPtr>&, const std::shared_ptr<Environment>&);
 
     // Expressions
     Literal evaluate(const Expr::Binary&);

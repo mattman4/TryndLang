@@ -24,6 +24,7 @@ class Parser {
     Stmt::StmtPtr forStatement();
     Stmt::StmtPtr ifStatement();
     Stmt::StmtPtr printStatement();
+    Stmt::StmtPtr returnStatement();
     Stmt::StmtPtr whileStatement();
     std::vector<Stmt::StmtPtr> block();
     Stmt::StmtPtr varDeclaration();

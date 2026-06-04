@@ -4,13 +4,17 @@
 #include "Interpreter.h"
 
 Literal Function::call(Interpreter& interpreter, const std::vector<Literal> arguments) {
-    Environment environment(interpreter.globalEnvironment);
+    std::shared_ptr<Environment> environment = std::make_shared<Environment>(closure);
 
     for (int i = 0; i < declaration.params.size(); i++) {
-        environment.define(declaration.params.at(i).lexeme, arguments.at(i));
+        environment->define(declaration.params.at(i).lexeme, arguments.at(i));
     }
 
-    interpreter.executeBlock(*declaration.body, &environment);
+    try {
+        interpreter.executeBlock(*declaration.body, environment);
+    } catch (const Return& returnValue) {
+        return returnValue.value;
+    }
 
     return std::monostate();
 }

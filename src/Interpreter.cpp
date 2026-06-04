@@ -18,8 +18,8 @@ void Interpreter::checkNumberOperands(const Token& token, const Literal& left, c
     throw RuntimeError(token, "Operands must be numbers.");
 }
 
-void Interpreter::executeBlock(const std::vector<Stmt::StmtPtr>& statements, Environment* innerEnvironment) {
-    Environment* previous = this->environment;
+void Interpreter::executeBlock(const std::vector<Stmt::StmtPtr>& statements, const std::shared_ptr<Environment>& innerEnvironment) {
+    const std::shared_ptr<Environment> previous = this->environment;
     try {
         this->environment = innerEnvironment;
 
@@ -42,8 +42,8 @@ void Interpreter::interpret(const std::vector<Stmt::StmtPtr>& statements) {
 }
 
 void Interpreter::execute(const Stmt::Block& stmt) {
-    Environment newEnvironment(environment);
-    executeBlock(stmt.statements, &newEnvironment);
+    const std::shared_ptr newEnvironment = std::make_shared<Environment>(environment);
+    executeBlock(stmt.statements, newEnvironment);
 }
 
 void Interpreter::execute(const Stmt::Expression& stmt) {
@@ -51,7 +51,7 @@ void Interpreter::execute(const Stmt::Expression& stmt) {
 }
 
 void Interpreter::execute(const Stmt::Function& stmt) {
-    const std::shared_ptr<Function> function = std::make_shared<Function>(stmt);
+    const std::shared_ptr<Function> function = std::make_shared<Function>(stmt, environment);
     environment->define(stmt.name.lexeme, function);
 }
 
@@ -66,6 +66,13 @@ void Interpreter::execute(const Stmt::If& stmt) {
 void Interpreter::execute(const Stmt::Print& stmt) {
     const Literal literal = evaluate(*stmt.expr);
     std::cout << literalToString(literal) << std::endl;
+}
+
+void Interpreter::execute(const Stmt::Return& stmt) {
+    Literal value = std::monostate();
+    if (stmt.value != nullptr) value = evaluate(*stmt.value);
+
+    throw Return(value);
 }
 
 void Interpreter::execute(const Stmt::Var& stmt) {
@@ -92,7 +99,7 @@ Literal Interpreter::evaluate(const Expr::Binary& expr) {
 
         case TokenType::MINUS:
             checkNumberOperands(expr.op, left, right);
-            return std::get<double>(left) - std::get<double>(left);
+            return std::get<double>(left) - std::get<double>(right);
         case TokenType::PLUS:
             if (std::holds_alternative<double>(left) && std::holds_alternative<double>(right)) {
                 return std::get<double>(left) + std::get<double>(right);
@@ -103,11 +110,10 @@ Literal Interpreter::evaluate(const Expr::Binary& expr) {
             throw RuntimeError(expr.op, "Operands must be both numbers or both strings.");
         case TokenType::SLASH:
             checkNumberOperands(expr.op, left, right);
-            return std::get<double>(left) / std::get<double>(left);
+            return std::get<double>(left) / std::get<double>(right);
         case TokenType::STAR:
             checkNumberOperands(expr.op, left, right);
-            return std::get<double>(left) * std::get<double>(left);
-
+            return std::get<double>(left) * std::get<double>(right);
         case TokenType::GREATER:
             checkNumberOperands(expr.op, left, right);
             return left > right;
